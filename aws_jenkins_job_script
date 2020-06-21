@@ -1,0 +1,29 @@
+#-----------------------------------
+echo $ECR_REPO_VER
+ECR_REPO="208715318727.dkr.ecr.ap-south-1.amazonaws.com/cybernx-lms:${LMS_ECR_Repo}"
+CONTAINER_NAME="captisio"
+DOCKER_LABLE="captisio"
+HARDLIMITCPU="384"
+REGION="ap-south-1"
+AWSLOG_STREAM="lms-ecs"
+AWSLOG_GROUP="/ecs/captisio"
+MEMORY="384"
+CONTAINER_PORT="80"
+TASKDEF_FAMILY="captisio"
+CLUSTER_NAME="captis-uat"
+SERVICE_NAME="lms-web"
+echo "################## Creating Task Defination ##################"
+
+sudo /usr/bin/python create_taskdef.py --container_name $CONTAINER_NAME  --newimage_name $ECR_REPO  --dockerlable $DOCKER_LABLE --hardlimitcpu $HARDLIMITCPU  --region $REGION  --awslogs_stream_prefix $AWSLOG_STREAM  --awslogs_group $AWSLOG_GROUP  --memory $MEMORY  --container_port  $CONTAINER_PORT
+echo "################## Register Task Defination ##################"
+sudo aws ecs register-task-definition --family $TASKDEF_FAMILY  --cli-input-json file://lmstaskdef.json
+
+#get last task defination
+LATEST_TASK_DEF=$(sudo aws ecs list-task-definitions --family-prefix $TASKDEF_FAMILY  |jq '.taskDefinitionArns|.[-1]' |awk -F 'task-definition/' '{print $2}' |sed 's/"//g')
+echo " the latest task def is ${LATEST_TASK_DEF}"
+
+# update the service defination with the latest taks defination.
+sudo aws ecs update-service --cluster $CLUSTER_NAME  --service $SERVICE_NAME  --task-definition "${LATEST_TASK_DEF}"
+
+
+#/bin/bash  checkdeploystatus.sh  $CLUSTER_NAME   $SERVICE_NAME
