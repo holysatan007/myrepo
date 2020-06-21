@@ -1,0 +1,52 @@
+{
+        "containerDefinitions": [
+            {
+                "environment": [],
+                "name": "{{ container_name }}",
+                "mountPoints": [
+                        {
+                        "containerPath":"/var/www/html",
+                        "sourceVolume":"lms_EFS"
+                        }
+                ],
+                "image": "{{ newimage_name }}",
+                "dockerLabels": {
+                    "Name": "{{ dockerlable }}"
+                },
+                "cpu": {{ hardlimitcpu }},
+                "portMappings": [
+                    {
+                        "protocol": "tcp",
+                        "containerPort": {{ container_port }},
+                        "hostPort": 0
+                    }
+                ],
+                "logConfiguration": {
+                    "logDriver": "awslogs",
+                    "options": {
+                        "awslogs-region": "{{ region }}",
+                        "awslogs-stream-prefix": "{{ awslogs_stream_prefix }}",
+                        "awslogs-group": "{{ awslogs_group }}"
+                    }
+                },
+                "memoryReservation": {{ memory }},
+                "essential": true,
+                "volumesFrom": []
+            }
+        ],
+        "volumes": [
+        {
+            "name": "lms_EFS",
+            "dockerVolumeConfiguration": {
+                "autoprovision": true,
+                "scope": "shared",
+                "driver": "local",
+                "driverOpts": {
+                    "type": "nfs",
+                    "device": ":/",
+                    "o": "addr=fs-c2a71513.efs.ap-south-1.amazonaws.com,nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport"
+                        }
+                }
+        }
+        ]
+}
